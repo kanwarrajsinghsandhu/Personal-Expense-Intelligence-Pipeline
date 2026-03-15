@@ -1,0 +1,16 @@
+version: 2
+
+models:
+  - name: monthly_category_spend
+    description: "Final analytics table for monthly spend by category."
+    columns:
+      - name: spend_month
+        tests:
+          - not_null
+      - name: category
+        tests:
+          - not_null
+      - name: total_amount
+        description: "The sum of all transactions in this category for the month."
+        tests:
+          - not_null

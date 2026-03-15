@@ -1,0 +1,32 @@
+# Secrets & Credentials
+Keys/
+.env
+*.json
+!data/merchant_catalog.json
+!dbt_project.yml
+!packages.yml
+!profiles.yml
+
+# Personal Data (PDFs and Private Statements)
+data/raw/*.pdf
+data/raw/*.PDF
+archive/
+notebooks/
+*.ipynb
+
+# Environment & Python
+venv/
+__pycache__/
+.pytest_cache/
+.llm_cache/
+.DS_Store
+*.egg-info/
+build/
+dist/
+
+# dbt Artifacts
+expense_tracker_dbt/target/
+expense_tracker_dbt/dbt_packages/
+expense_tracker_dbt/logs/
+expense_tracker_dbt/dbt_modules/
+profiles.yml

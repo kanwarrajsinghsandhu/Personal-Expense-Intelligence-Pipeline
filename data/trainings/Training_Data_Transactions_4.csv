@@ -1,0 +1,53 @@
+```csv
+raw_text,canonical_name,category,subcategory
+PETSMART #2847 TORONTO ON,PetSmart,Shopping,Pet Supplies
+PETSMART #1847 VANCOUVER BC,PetSmart,Shopping,Pet Supplies
+PETCO #847 CALGARY AB,Petco,Shopping,Pet Supplies
+GLOBAL PET FOODS #284 MISSISSAUGA ON,Global Pet Foods,Shopping,Pet Supplies
+GLOBAL PET FOODS #847 OTTAWA ON,Global Pet Foods,Shopping,Pet Supplies
+PET VALU #2847 SCARBOROUGH ON,Pet Valu,Shopping,Pet Supplies
+PET VALU #1923 EDMONTON AB,Pet Valu,Shopping,Pet Supplies
+REN'S PETS DEPOT MARKHAM ON,Ren's Pets,Shopping,Pet Supplies
+BOSLEY'S PET FOOD PLUS BURNABY BC,Bosley's,Shopping,Pet Supplies
+SQ *CITY VET CLINIC TORONTO ON,City Vet Clinic,Health & Wellness,Veterinary
+SQ *ANIMAL HOSPITAL VANCOUVER BC,Animal Hospital,Health & Wellness,Veterinary
+TST* PET CARE VET CALGARY AB,Pet Care Vet,Health & Wellness,Veterinary
+BANFIELD PET HOSPITAL OTTAWA ON,Banfield Pet Hospital,Health & Wellness,Veterinary
+VCA ANIMAL HOSPITAL MISSISSAUGA ON,VCA Animal Hospital,Health & Wellness,Veterinary
+SQ *HEALTHY PAWS VET EDMONTON AB,Healthy Paws Vet,Health & Wellness,Veterinary
+ALTIMA DENTAL #847 TORONTO ON,Altima Dental,Health & Wellness,Dental Services
+DENTALCORP CLINIC VANCOUVER BC,Dentalcorp,Health & Wellness,Dental Services
+SQ *SMILE DENTAL CALGARY AB,Smile Dental,Health & Wellness,Dental Services
+TST* FAMILY DENTIST OTTAWA ON,Family Dentist,Health & Wellness,Dental Services
+SQ *BRIGHT SMILE DENTAL MISSISSAUGA ON,Bright Smile Dental,Health & Wellness,Dental Services
+123DENTIST BURNABY BC,123Dentist,Health & Wellness,Dental Services
+AXIOM DENTAL HAMILTON ON,Axiom Dental,Health & Wellness,Dental Services
+SQ *CITY CHIRO CLINIC TORONTO ON,City Chiro Clinic,Health & Wellness,Chiropractic
+TST* SPINE HEALTH CHIRO VANCOUVER BC,Spine Health Chiro,Health & Wellness,Chiropractic
+SQ *BACK IN ACTION CALGARY AB,Back in Action,Health & Wellness,Chiropractic
+LIFEFORCE CHIROPRACTIC OAKVILLE ON,LifeForce Chiropractic,Health & Wellness,Chiropractic
+SQ *WELLNESS CHIRO OTTAWA ON,Wellness Chiro,Health & Wellness,Chiropractic
+MASSAGE ADDICT #847 TORONTO ON,Massage Addict,Health & Wellness,Massage Therapy
+ELEMENTS MASSAGE VANCOUVER BC,Elements Massage,Health & Wellness,Massage Therapy
+SQ *RELAX MASSAGE SPA MISSISSAUGA ON,Relax Massage Spa,Health & Wellness,Massage Therapy
+TOYS R US #2847 VAUGHAN ON,Toys R Us,Shopping,Toys
+TOYS R US CANADA SCARBOROUGH ON,Toys R Us,Shopping,Toys
+BABIES R US #847 TORONTO ON,Babies R Us,Shopping,Baby Products
+BABIES R US MISSISSAUGA ON,Babies R Us,Shopping,Baby Products
+MASTERMIND TOYS #284 OTTAWA ON,Mastermind Toys,Shopping,Toys
+MASTERMIND TOYS #847 CALGARY AB,Mastermind Toys,Shopping,Toys
+INDIGO KIDS #2847 VANCOUVER BC,Indigo,Shopping,Books & Toys
+WEST COAST KIDS BURNABY BC,West Coast Kids,Shopping,Baby Products
+SNUGGLE BUGZ MARKHAM ON,Snuggle Bugz,Shopping,Baby Products
+SQ *LITTLE LEARNERS DAYCARE TORONTO ON,Little Learners Daycare,Education & Learning,Childcare
+TST* BRIGHT START DAYCARE VANCOUVER BC,Bright Start Daycare,Education & Learning,Childcare
+SQ *KIDS FIRST DAYCARE CALGARY AB,Kids First Daycare,Education & Learning,Childcare
+SQ *HAPPY DAYS CHILDCARE OTTAWA ON,Happy Days Childcare,Education & Learning,Childcare
+YMCA CHILDCARE MISSISSAUGA ON,YMCA,Education & Learning,Childcare
+KUMON MATH & READING TORONTO ON,Kumon,Education & Learning,Tutoring
+KUMON LEARNING CENTRE VANCOUVER BC,Kumon,Education & Learning,Tutoring
+OXFORD LEARNING #847 CALGARY AB,Oxford Learning,Education & Learning,Tutoring
+SYLVAN LEARNING CENTRE OTTAWA ON,Sylvan Learning,Education & Learning,Tutoring
+MATHNASIUM LEARNING MARKHAM ON,Mathnasium,Education & Learning,Tutoring
+ONCE UPON A CHILD EDMONTON AB,Once Upon A Child,Shopping,Consignment Store
+```

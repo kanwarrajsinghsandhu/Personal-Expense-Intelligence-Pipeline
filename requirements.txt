@@ -1,0 +1,22 @@
+# Core Data & Parsing
+pandas
+pdfplumber
+rapidfuzz
+python-dotenv
+
+# Google Cloud & BigQuery
+google-cloud-bigquery
+google-cloud-storage
+
+# Transformation (dbt)
+dbt-bigquery
+
+# ML & AI
+sentence-transformers
+joblib
+groq
+
+# Local Development
+jupyter
+pytest
+diskcache

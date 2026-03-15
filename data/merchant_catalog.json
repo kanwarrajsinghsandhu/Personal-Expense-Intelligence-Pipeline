@@ -1,0 +1,250 @@
+{
+  "merchants": [
+    {
+      "id": "AMZN001",
+      "canonical_name": "Amazon",
+      "aliases": [
+        "amazon",
+        "amzn",
+        "amazn",
+        "amazon.com",
+        "amazon prime",
+        "aws",
+        "amzn mktp"
+      ],
+      "category": "Online Retail",
+      "subcategory": "Marketplace",
+      "confidence": "high"
+    },
+    {
+      "id": "DATACAMP001",
+      "canonical_name": "DataCamp",
+      "aliases": [
+        "datacamp",
+        "data camp",
+        "datacamp.com",
+        "data-camp"
+      ],
+      "category": "Education & Learning",
+      "subcategory": "Online Courses",
+      "confidence": "high"
+    },
+    {
+      "id": "OPENAI001",
+      "canonical_name": "OpenAI",
+      "aliases": [
+        "openai",
+        "open ai",
+        "chatgpt plus",
+        "openai.com"
+      ],
+      "category": "Software & Services",
+      "subcategory": "AI/API Services",
+      "confidence": "high"
+    },
+    {
+      "id": "BESTBUY001",
+      "canonical_name": "Best Buy",
+      "aliases": [
+        "best buy",
+        "bestbuy",
+        "bestbuy.com"
+      ],
+      "category": "Retail",
+      "subcategory": "Electronics",
+      "confidence": "high"
+    },
+    {
+      "id": "LINKEDIN_005",
+      "canonical_name": "LinkedIn",
+      "aliases": [
+        "linkedin",
+        "linkedinprea",
+        "linkedin learning",
+        "linkedin premium"
+      ],
+      "category": "Professional Development",
+      "subcategory": "Online Learning & Career",
+      "confidence": "high"
+    },
+    {
+      "id": "ROGERS_006",
+      "canonical_name": "Rogers",
+      "aliases": [
+        "rogers",
+        "rogers wireless",
+        "rogers plus",
+        "virgin plus"
+      ],
+      "category": "Telecommunications",
+      "subcategory": "Mobile Provider",
+      "confidence": "high"
+    },
+    {
+      "id": "UBER_007",
+      "canonical_name": "Uber",
+      "aliases": [
+        "uber",
+        "uber eats",
+        "uber trip",
+        "uber canada"
+      ],
+      "category": "Rideshare & Food Delivery",
+      "subcategory": "Transportation",
+      "confidence": "high"
+    },
+    {
+      "id": "MYSTRIVERA_008",
+      "canonical_name": "Mystrivera",
+      "aliases": [
+        "mystrivera",
+        "strivera",
+        "mystri vera"
+      ],
+      "category": "Education & Learning",
+      "subcategory": "Specialty Shop",
+      "confidence": "medium"
+    },
+    {
+      "id": "MAILCHIMP_009",
+      "canonical_name": "Mailchimp",
+      "aliases": [
+        "mailchimp",
+        "intuit mailchimp",
+        "intuit*mailchimp"
+      ],
+      "category": "Software & Services",
+      "subcategory": "Email Marketing",
+      "confidence": "high"
+    },
+    {
+      "id": "STAPLES_010",
+      "canonical_name": "Staples",
+      "aliases": [
+        "staples",
+        "staplesprint",
+        "staples print",
+        "staplesprint.ca"
+      ],
+      "category": "Office & Printing",
+      "subcategory": "Office Supplies",
+      "confidence": "high"
+    },
+    {
+      "id": "EVENTBRITE_011",
+      "canonical_name": "Eventbrite",
+      "aliases": [
+        "eventbrite",
+        "eventbrite.com"
+      ],
+      "category": "Entertainment & Events",
+      "subcategory": "Event Ticketing",
+      "confidence": "high"
+    },
+    {
+      "id": "SHERATON_012",
+      "canonical_name": "Sheraton Hotel",
+      "aliases": [
+        "sheraton",
+        "sheratonhamilt",
+        "htl*sheraton"
+      ],
+      "category": "Travel & Accommodation",
+      "subcategory": "Hotels",
+      "confidence": "high"
+    },
+    {
+      "id": "DOUBLETREE_013",
+      "canonical_name": "DoubleTree by Hilton",
+      "aliases": [
+        "doubletree",
+        "double tree",
+        "doubletree ottawa"
+      ],
+      "category": "Travel & Accommodation",
+      "subcategory": "Hotels",
+      "confidence": "high"
+    },
+    {
+      "id": "SHELL_014",
+      "canonical_name": "Shell",
+      "aliases": [
+        "shell",
+        "shell canada"
+      ],
+      "category": "Transportation",
+      "subcategory": "Gas Station",
+      "confidence": "high"
+    },
+    {
+      "id": "IMPARK_015",
+      "canonical_name": "Impark",
+      "aliases": [
+        "impark",
+        "impark parking"
+      ],
+      "category": "Transportation",
+      "subcategory": "Parking",
+      "confidence": "high"
+    },
+    {
+      "id": "MIDI_BISTRO_016",
+      "canonical_name": "Midi Bistro",
+      "aliases": [
+        "midi bistro"
+      ],
+      "category": "Food & Dining",
+      "subcategory": "Restaurant",
+      "confidence": "high"
+    },
+    {
+      "id": "PETRO_017",
+      "canonical_name": "Petro-Canada",
+      "aliases": [
+        "petro-canada",
+        "petro canada",
+        "petrocan"
+      ],
+      "category": "Transportation",
+      "subcategory": "Gas Station",
+      "confidence": "high"
+    },
+    {
+      "id": "TIMHORTONS_018",
+      "canonical_name": "Tim Hortons",
+      "aliases": [
+        "tim hortons",
+        "tim horton",
+        "tims"
+      ],
+      "category": "Food & Dining",
+      "subcategory": "Coffee & Fast Food",
+      "confidence": "high"
+    },
+    {
+      "id": "NETFLIX_019",
+      "canonical_name": "Netflix",
+      "aliases": [
+        "netflix",
+        "netflix.com"
+      ],
+      "category": "Entertainment & Events",
+      "subcategory": "Streaming",
+      "confidence": "high"
+    },
+    {
+      "id": "SHOPPERS_020",
+      "canonical_name": "Shoppers Drug Mart",
+      "aliases": [
+        "shoppers drug mart",
+        "shoppers drug",
+        "shoppers"
+      ],
+      "category": "Health & Pharmacy",
+      "subcategory": "Pharmacy",
+      "confidence": "high"
+    }
+  ],
+  "last_updated": "2026-03-03",
+  "version": "2.0"
+}

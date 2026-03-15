@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "expense_tracker"
+version = "0.1.0"
+description = "Industry-grade expense tracker and data pipeline"
+requires-python = ">=3.11"
+dependencies = [
+    "pandas",
+    "pdfplumber",
+    "google-cloud-bigquery",
+    "python-dotenv",
+    "rapidfuzz",
+    "sentence-transformers",
+    "groq",
+    "diskcache"
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]

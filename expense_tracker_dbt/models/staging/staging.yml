@@ -1,0 +1,14 @@
+version: 2
+
+models:
+  - name: stg_transactions
+    columns:
+      - name: dedup_key
+        tests:
+          - unique
+          - not_null
+      - name: amount
+        tests:
+          # We expect expenses to be positive. If they are negative, it might be a refund.
+          # For now, let's just ensure they are never NULL.
+          - not_null

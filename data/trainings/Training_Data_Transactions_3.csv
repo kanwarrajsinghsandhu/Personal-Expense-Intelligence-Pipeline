@@ -1,0 +1,54 @@
+```csv
+raw_text,canonical_name,category,subcategory
+HOME DEPOT #7284 TORONTO ON,Home Depot,Shopping,Home Improvement
+HOME DEPOT #8473 VANCOUVER BC,Home Depot,Shopping,Home Improvement
+RONA INC #1847 CALGARY AB,Rona,Shopping,Home Improvement
+RONA HOME & GARDEN #0284 OTTAWA ON,Rona,Shopping,Home Improvement
+LOWES #2847 MISSISSAUGA ON,Lowe's,Shopping,Home Improvement
+LOWES CANADA #1923 EDMONTON AB,Lowe's,Shopping,Home Improvement
+CANADIAN TIRE AUTO #847 SCARBOROUGH ON,Canadian Tire,Transportation,Auto Service
+CANADIAN TIRE #2910 WINNIPEG MB,Canadian Tire,Shopping,Home Improvement
+HOME HARDWARE #847 GUELPH ON,Home Hardware,Shopping,Home Improvement
+HOME HARDWARE BLDG CTR LONDON ON,Home Hardware,Shopping,Home Improvement
+RENO-DEPOT #284 MONTREAL QC,Reno-Depot,Shopping,Home Improvement
+RENO-DEPOT #847 LAVAL QC,Reno-Depot,Shopping,Home Improvement
+SQ *JOE'S PLUMBING NORTH YORK ON,Joe's Plumbing,Professional Services,Plumbing
+SQ *QUICK PLUMBER VANCOUVER BC,Quick Plumber,Professional Services,Plumbing
+TST* MASTER PLUMBING CALGARY AB,Master Plumbing,Professional Services,Plumbing
+SQ *DRAIN RESCUE TORONTO ON,Drain Rescue,Professional Services,Plumbing
+SQ *ABC PLUMBING OTTAWA ON,ABC Plumbing,Professional Services,Plumbing
+ROTO-ROOTER PLUMBING 1-800-768-6911,Roto-Rooter,Professional Services,Plumbing
+MR ROOTER PLUMBING MISSISSAUGA ON,Mr. Rooter,Professional Services,Plumbing
+SQ *CITY ELECTRICIAN TORONTO ON,City Electrician,Professional Services,Electrical
+TST* POWER ELECTRIC VANCOUVER BC,Power Electric,Professional Services,Electrical
+SQ *BRIGHT ELECTRICAL CALGARY AB,Bright Electrical,Professional Services,Electrical
+SQ *HOME HANDYMAN HAMILTON ON,Home Handyman,Professional Services,Handyman
+TST* FIX IT PROS EDMONTON AB,Fix It Pros,Professional Services,Handyman
+MR LUBE #2847 SCARBOROUGH ON,Mr. Lube,Transportation,Auto Service
+MR LUBE #1847 BURNABY BC,Mr. Lube,Transportation,Auto Service
+JIFFY LUBE #847 CALGARY AB,Jiffy Lube,Transportation,Auto Service
+OIL CHANGERS #284 KITCHENER ON,Oil Changers,Transportation,Auto Service
+CANADIAN TIRE AUTO SVC MARKHAM ON,Canadian Tire,Transportation,Auto Service
+SQ *AUTO REPAIR SHOP TORONTO ON,Auto Repair Shop,Transportation,Auto Service
+SQ *QUICK FIX AUTO VANCOUVER BC,Quick Fix Auto,Transportation,Auto Service
+TST* CITY MOTORS OTTAWA ON,City Motors,Transportation,Auto Service
+SQ *BRAKE MASTERS CALGARY AB,Brake Masters,Transportation,Auto Service
+MIDAS AUTO SERVICE #847 LONDON ON,Midas,Transportation,Auto Service
+FOUNTAIN TIRE #2847 EDMONTON AB,Fountain Tire,Transportation,Auto Service
+KAL TIRE #847 KELOWNA BC,Kal Tire,Transportation,Auto Service
+OK TIRE #284 REGINA SK,OK Tire,Transportation,Auto Service
+COSTCO TIRE CENTRE VAUGHAN ON,Costco,Transportation,Auto Service
+PNEUS RATTACHEZ QC #847 MONTREAL QC,Pneus Rattachez,Transportation,Auto Service
+SQ *MUFFLER MAN BRAMPTON ON,Muffler Man,Transportation,Auto Service
+SPEEDY AUTO SERVICE MISSISSAUGA ON,Speedy,Transportation,Auto Service
+ACTIVE GREEN+ROSS TORONTO ON,Active Green + Ross,Transportation,Auto Service
+NAPA AUTO PARTS #2847 WINNIPEG MB,NAPA Auto Parts,Shopping,Auto Parts
+PARTSOURCE #847 AJAX ON,PartSource,Shopping,Auto Parts
+PRINCESS AUTO #284 SASKATOON SK,Princess Auto,Shopping,Auto Parts
+IMPARK LOT #2847 TORONTO ON,Impark,Transportation,Parking
+IMPARK #8473 VANCOUVER BC,Impark,Transportation,Parking
+GREEN P PARKING TORONTO ON,Green P,Transportation,Parking
+EASYPARK #847 VANCOUVER BC,EasyPark,Transportation,Parking
+INDIGO PARKING #2847 MONTREAL QC,Indigo,Transportation,Parking
+CITY OF TORONTO PARKING TICKET,City of Toronto,Transportation,Parking Fine
+```

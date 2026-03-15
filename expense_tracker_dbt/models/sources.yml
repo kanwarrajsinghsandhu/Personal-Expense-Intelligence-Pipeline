@@ -1,0 +1,8 @@
+version: 2
+
+sources:
+  - name: credit_card_analytics
+    database: expensetracker-485100
+    schema: credit_card_analytics
+    tables:
+      - name: silver_transactions
