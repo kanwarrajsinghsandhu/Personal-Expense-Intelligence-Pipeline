@@ -34,42 +34,67 @@ def create_dedup_key(date_val, merchant_raw, amount, user_name):
     return hashlib.sha256(raw_string.encode()).hexdigest()
 
 
-def ensure_silver_table(client):
-    """Ensures the silver table exists with correct multi-tenant schema."""
-    dataset_id = client.dataset(DATASET_ID)
-    table_id = dataset_id.table(SILVER_TABLE_ID)
+# Define schema ONCE at module level so it can be shared between
+# table creation and the BQ load job (avoids stale-schema mismatches).
+SILVER_SCHEMA = [
+    bigquery.SchemaField("dedup_key", "STRING"),
+    bigquery.SchemaField("user_name", "STRING"),
+    bigquery.SchemaField("bank_name", "STRING"),
+    bigquery.SchemaField("statement_type", "STRING"),
+    bigquery.SchemaField("date", "DATE"),
+    bigquery.SchemaField("description", "STRING"),
+    bigquery.SchemaField("amount", "FLOAT"),
+    bigquery.SchemaField("category", "STRING"),
+    bigquery.SchemaField("subcategory", "STRING"),
+    bigquery.SchemaField("merchant_standardized", "STRING"),
+    bigquery.SchemaField("match_type", "STRING"),
+    bigquery.SchemaField("transaction_type", "STRING"),
+    bigquery.SchemaField("is_internal", "BOOLEAN"),
+    bigquery.SchemaField("file_source", "STRING"),
+    bigquery.SchemaField("processed_ts", "TIMESTAMP"),
+    # --- ML COLUMNS ---
+    bigquery.SchemaField("posting_lag_days", "INTEGER"),
+    bigquery.SchemaField("transaction_cycle_day", "STRING"),
+    bigquery.SchemaField("transaction_weekday", "INTEGER"),
+    bigquery.SchemaField("is_weekend", "BOOLEAN"),
+    bigquery.SchemaField("is_foreign_currency", "BOOLEAN"),
+    bigquery.SchemaField("fx_amount_usd", "FLOAT"),
+    bigquery.SchemaField("statement_id", "STRING"),
+    bigquery.SchemaField("statement_year_month", "STRING"),
+]
 
-    schema = [
-        bigquery.SchemaField("dedup_key", "STRING"),
-        bigquery.SchemaField("user_name", "STRING"),
-        bigquery.SchemaField("bank_name", "STRING"),
-        bigquery.SchemaField("statement_type", "STRING"),
-        bigquery.SchemaField("date", "DATE"),
-        bigquery.SchemaField("description", "STRING"),
-        bigquery.SchemaField("amount", "FLOAT"),
-        bigquery.SchemaField("category", "STRING"),
-        bigquery.SchemaField("subcategory", "STRING"),
-        bigquery.SchemaField("merchant_standardized", "STRING"),
-        bigquery.SchemaField("match_type", "STRING"),
-        bigquery.SchemaField("transaction_type", "STRING"),
-        bigquery.SchemaField("is_internal", "BOOLEAN"),
-        bigquery.SchemaField("file_source", "STRING"),
-        bigquery.SchemaField("processed_ts", "TIMESTAMP"),
-    ]
+# Expected column types for validation (BQ field_type → set of field names)
+_EXPECTED_TYPES = {f.name: f.field_type for f in SILVER_SCHEMA}
+
+
+def ensure_silver_table(client):
+    """Ensures the silver table exists with the correct schema.
+    
+    Drops and recreates the table if column names or types differ from SILVER_SCHEMA.
+    This prevents stale schema issues (e.g. statement_year_month saved as INTEGER).
+    """
+    dataset_ref = client.dataset(DATASET_ID)
+    table_ref = dataset_ref.table(SILVER_TABLE_ID)
 
     try:
-        table = client.get_table(table_id)
-        # Check if new columns exist, if not, we must recreate or update
-        existing_cols = {field.name for field in table.schema}
-        if "user_name" not in existing_cols:
-            logger.warning("Table schema is outdated. Deleting and recreating for multi-tenant support.")
-            client.delete_table(table_id)
+        table = client.get_table(table_ref)
+        existing = {f.name: f.field_type for f in table.schema}
+        # Recreate if any expected column is missing OR has wrong type
+        mismatches = [
+            name for name, typ in _EXPECTED_TYPES.items()
+            if existing.get(name) != typ
+        ]
+        if mismatches:
+            logger.warning(
+                "Schema mismatch for columns %s — dropping and recreating silver table.", mismatches
+            )
+            client.delete_table(table_ref)
             raise Exception("Trigger recreation")
         logger.info(f"Table {SILVER_TABLE_ID} already exists with correct schema.")
     except Exception:
         logger.info(f"Creating table {SILVER_TABLE_ID}...")
-        table = bigquery.Table(table_id, schema=schema)
-        client.create_table(table)
+        new_table = bigquery.Table(table_ref, schema=SILVER_SCHEMA)
+        client.create_table(new_table)
 
 
 def get_existing_dedup_keys(client):
@@ -165,7 +190,10 @@ def load_bronze_to_silver():
     schema_cols = [
         'dedup_key', 'user_name', 'bank_name', 'statement_type', 'date', 'description', 
         'amount', 'category', 'subcategory', 'merchant_standardized', 'match_type', 
-        'transaction_type', 'is_internal', 'file_source', 'processed_ts',
+        'transaction_type', 'is_internal', 'file_source', 'processed_ts', # New ML Features
+        'posting_lag_days', 'transaction_cycle_day', 'transaction_weekday', 
+        'is_weekend', 'is_foreign_currency', 'fx_amount_usd', 'statement_id', 
+        'statement_year_month'
     ]
     for col in schema_cols:
         if col not in final_df.columns:
@@ -173,7 +201,40 @@ def load_bronze_to_silver():
     final_df = final_df[schema_cols]
 
     table_ref = f"{PROJECT_ID}.{DATASET_ID}.{SILVER_TABLE_ID}"
-    job_config = bigquery.LoadJobConfig(write_disposition="WRITE_APPEND")
+
+    # --- TYPE COERCIONS ---
+    # Keep STRING columns as strings (prevents pyarrow casting '202411' → int64)
+    str_cols = ['transaction_cycle_day', 'statement_year_month', 'statement_id']
+    for col in str_cols:
+        if col in final_df.columns:
+            final_df[col] = final_df[col].astype(str).where(final_df[col].notna(), None)
+
+    # Coerce INTEGER columns to numeric
+    int_cols = ['posting_lag_days', 'transaction_weekday']
+    for col in int_cols:
+        if col in final_df.columns:
+            final_df[col] = pd.to_numeric(final_df[col], errors='coerce')
+
+    # Coerce BOOLEAN columns (is_internal, is_weekend, is_foreign_currency already bool)
+    bool_cols = ['is_internal', 'is_weekend', 'is_foreign_currency']
+    for col in bool_cols:
+        if col in final_df.columns:
+            final_df[col] = final_df[col].astype(bool)
+
+    # Coerce FLOAT columns
+    float_cols = ['amount', 'fx_amount_usd']
+    for col in float_cols:
+        if col in final_df.columns:
+            final_df[col] = pd.to_numeric(final_df[col], errors='coerce')
+
+    logger.info("Silver dataframe dtypes before load:\n%s", final_df.dtypes.to_string())
+
+    # Pass the explicit schema so pyarrow uses our intended types,
+    # not whatever BQ inferred from a previous (possibly stale) table schema.
+    job_config = bigquery.LoadJobConfig(
+        write_disposition="WRITE_APPEND",
+        schema=SILVER_SCHEMA,
+    )
 
     logger.info(f"Loading {len(final_df)} new transactions into {SILVER_TABLE_ID}...")
     client.load_table_from_dataframe(final_df, table_ref, job_config=job_config).result()

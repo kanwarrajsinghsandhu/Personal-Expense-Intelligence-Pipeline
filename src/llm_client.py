@@ -29,36 +29,90 @@ CACHE_DIR = PROJECT_ROOT / "data" / ".llm_cache"
 # Prompt template
 # ---------------------------------------------------------------------------
 
+# Valid category taxonomy — must match the dbt Gold layer exactly.
+_VALID_CATEGORIES = [
+    "Groceries",
+    "Telecommunications",
+    "Rideshare & Food Delivery",
+    "Professional Development",
+    "Education & Learning",
+    "Online Retail",
+    "Retail",
+    "Software & Services",
+    "Office & Printing",
+    "Food & Dining",
+    "Health & Pharmacy",
+    "Entertainment & Events",
+    "Travel & Accommodation",
+    "Transportation",
+    "Internal Payment",
+    "Uncategorized",
+]
+
 _SYSTEM_PROMPT = (
-    "You extract canonical merchant names from bank transaction descriptions. "
-    "Reply with ONLY the merchant name — no explanation, no punctuation, no quotes, no list. "
-    "One short answer only. "
-    "Remove store numbers, phone numbers, city/province codes, transaction IDs, and payment processor prefixes. "
-    "Use proper title case. "
-    "If it is a bank payment or transfer, reply: Internal Payment"
+    "You are a financial transaction classifier for a Canadian personal expense tracker. "
+    "Given a raw bank transaction description, extract three fields and return ONLY valid JSON. "
+    "Fields:\n"
+    "  - merchant_standardized: canonical merchant name (title case, no store numbers, city codes, or transaction IDs)\n"
+    "  - category: one of the valid categories listed in the prompt — do NOT invent new categories\n"
+    "  - subcategory: a concise descriptive sub-type (e.g. 'Streaming', 'Gas Station', 'Restaurant')\n"
+    "If the description is a bank payment, credit, or internal transfer, use category 'Internal Payment'. "
+    "Output ONLY the JSON object, no explanation, no markdown fences."
 )
 
 _FEW_SHOT_EXAMPLES = [
-    ("AMZN MKTP CA*2M4N7P3 866-216-1072 ON", "Amazon"),
-    ("TIM HORTONS #9382 TORONTO ON", "Tim Hortons"),
-    ("SQ *BELLA PIZZA VANCOUVER BC", "Bella Pizza"),
-    ("UBER CANADA/UBERTRIP TORONTO ON", "Uber"),
-    ("PAYMENT - THANK YOU / PAIEMENT - MERCI", "Internal Payment"),
-    ("NETFLIX.COM NETFLIX.COM CA", "Netflix"),
-    ("LINKEDINPREA *95211646 MOUNTAIN VIEWCA", "LinkedIn"),
-    ("GOOGLE *YouTubePremium G.CO/HELPPAY# CA", "YouTube Premium"),
-    ("SHOPPERS DRUG MART #2847 TORONTO ON", "Shoppers Drug Mart"),
-    ("PETRO-CANADA #8473 LONDON ON", "Petro-Canada"),
+    (
+        "AMZN MKTP CA*2M4N7P3 866-216-1072 ON",
+        '{"merchant_standardized": "Amazon", "category": "Online Retail", "subcategory": "Marketplace"}',
+    ),
+    (
+        "TIM HORTONS #9382 TORONTO ON",
+        '{"merchant_standardized": "Tim Hortons", "category": "Food & Dining", "subcategory": "Coffee & Fast Food"}',
+    ),
+    (
+        "UBER CANADA/UBERTRIP TORONTO ON",
+        '{"merchant_standardized": "Uber", "category": "Rideshare & Food Delivery", "subcategory": "Rideshare"}',
+    ),
+    (
+        "PAYMENT - THANK YOU / PAIEMENT - MERCI",
+        '{"merchant_standardized": "Internal Payment", "category": "Internal Payment", "subcategory": "Credit Card Payment"}',
+    ),
+    (
+        "NETFLIX.COM NETFLIX.COM CA",
+        '{"merchant_standardized": "Netflix", "category": "Entertainment & Events", "subcategory": "Streaming"}',
+    ),
+    (
+        "LINKEDINPREA *95211646 MOUNTAIN VIEWCA",
+        '{"merchant_standardized": "LinkedIn", "category": "Professional Development", "subcategory": "Online Learning & Career"}',
+    ),
+    (
+        "SHOPPERS DRUG MART #2847 TORONTO ON",
+        '{"merchant_standardized": "Shoppers Drug Mart", "category": "Health & Pharmacy", "subcategory": "Pharmacy"}',
+    ),
+    (
+        "PETRO-CANADA #8473 LONDON ON",
+        '{"merchant_standardized": "Petro-Canada", "category": "Transportation", "subcategory": "Gas Station"}',
+    ),
+    (
+        "ROGERS WIRELESS VEST ON",
+        '{"merchant_standardized": "Rogers", "category": "Telecommunications", "subcategory": "Mobile Provider"}',
+    ),
+    (
+        "GOOGLE *GOOGLE STORAGE G.CO/HELPPAY# CA",
+        '{"merchant_standardized": "Google One", "category": "Software & Services", "subcategory": "Cloud Storage"}',
+    ),
 ]
 
 
 def _build_prompt(merchant_raw: str) -> str:
-    """Build a strict few-shot prompt that forces a single-line merchant name output."""
+    """Build a structured few-shot prompt instructing the LLM to return JSON with merchant, category, subcategory."""
+    valid_cats = ", ".join(f'"{c}"' for c in _VALID_CATEGORIES)
     examples_text = "\n".join(
-        f'Input: "{raw}" -> Output: "{canonical}"'
+        f'Input: "{raw}" -> Output: {canonical}'
         for raw, canonical in _FEW_SHOT_EXAMPLES
     )
     return (
+        f"Valid categories: [{valid_cats}]\n\n"
         f"{examples_text}\n"
         f'Input: "{merchant_raw}" -> Output:'
     )
@@ -84,12 +138,10 @@ def _call_groq(prompt: str, model: str = "llama-3.3-70b-versatile") -> str:
             {"role": "user", "content": prompt},
         ],
         temperature=0.0,
-        max_tokens=15,  # Merchant names are short; hard cap prevents verbose output
-        stop=["\n", "Input:"],  # Stop at newline or next example
+        max_tokens=80,  # Increased to accommodate JSON object response
+        stop=["\nInput:"],  # Stop at next example marker only
     )
-    raw = response.choices[0].message.content.strip()
-    # Strip any residual quotes the model might add
-    return raw.strip('"').strip("'")
+    return response.choices[0].message.content.strip()
 
 
 def _call_gemini(prompt: str) -> str:
@@ -141,9 +193,9 @@ def standardize_merchant_with_llm(
     merchant_raw: str,
     provider: str = "groq",
     use_cache: bool = True,
-) -> tuple[str, float]:
+) -> tuple[str, str, str, float]:
     """
-    Use an LLM to extract the canonical merchant name from a raw transaction string.
+    Use an LLM to classify a raw bank transaction description.
 
     Args:
         merchant_raw: Raw merchant string from bank statement.
@@ -151,17 +203,21 @@ def standardize_merchant_with_llm(
         use_cache: If True, cache results to disk to avoid repeat API calls.
 
     Returns:
-        (standardized_name, confidence_score)
+        (merchant_standardized, category, subcategory, confidence_score)
         confidence_score is always 0.75 for LLM results (lower than catalog=0.95).
     """
+    import json as _json
+
+    _FALLBACK = (merchant_raw, "Uncategorized", "Unknown", 0.0)
+
     if not merchant_raw or not merchant_raw.strip():
-        return merchant_raw, 0.0
+        return _FALLBACK
 
     merchant_raw = merchant_raw.strip()
 
     # --- Cache lookup ---
     cache = None
-    cache_key = f"{provider}:{merchant_raw}"
+    cache_key = f"{provider}:v2:{merchant_raw}"  # v2 key because response shape changed
     if use_cache:
         try:
             from diskcache import Cache
@@ -178,40 +234,63 @@ def standardize_merchant_with_llm(
     prompt = _build_prompt(merchant_raw)
     try:
         if provider == "groq":
-            result = _call_groq(prompt)
+            raw_response = _call_groq(prompt)
         elif provider == "gemini":
-            result = _call_gemini(prompt)
+            raw_response = _call_gemini(prompt)
         elif provider == "openai":
-            result = _call_openai(prompt)
+            raw_response = _call_openai(prompt)
         else:
             raise ValueError(f"Unknown LLM provider: '{provider}'. Use 'groq', 'gemini', or 'openai'.")
 
-        logger.debug("LLM '%s' → '%s' (via %s)", merchant_raw, result, provider)
+        logger.debug("LLM raw response for '%s': %s (via %s)", merchant_raw, raw_response, provider)
 
     except Exception as e:
         logger.warning("LLM call failed for '%s': %s", merchant_raw, e)
-        return merchant_raw, 0.0   # Return raw name on failure
+        return _FALLBACK
+
+    # --- Parse JSON response ---
+    try:
+        # Strip accidental markdown fences if model adds them
+        clean = raw_response.strip().strip('`').strip()
+        if clean.startswith("json"):
+            clean = clean[4:].strip()
+        parsed = _json.loads(clean)
+        merchant_std = parsed.get("merchant_standardized", merchant_raw).strip().strip('"').strip("'")
+        category = parsed.get("category", "Uncategorized").strip()
+        subcategory = parsed.get("subcategory", "Unknown").strip()
+
+        # Guard: if LLM invented a category, fall back to Uncategorized
+        if category not in _VALID_CATEGORIES:
+            logger.warning("LLM returned invalid category '%s' for '%s'; defaulting to Uncategorized", category, merchant_raw)
+            category = "Uncategorized"
+
+        result = (merchant_std, category, subcategory, 0.75)
+
+    except (_json.JSONDecodeError, AttributeError) as e:
+        logger.warning("LLM JSON parse failed for '%s' (response: %r): %s", merchant_raw, raw_response, e)
+        # Best effort: treat the whole response as a merchant name, no category
+        result = (raw_response.strip('"').strip("'"), "Uncategorized", "Unknown", 0.5)
 
     # --- Cache result ---
     if use_cache and cache is not None:
         try:
-            cache[cache_key] = (result, 0.75)
+            cache[cache_key] = result
         except Exception as e:
             logger.warning("Cache write failed: %s", e)
 
-    return result, 0.75
+    return result
 
 
 def batch_standardize_merchants(
     merchants: list[str],
     provider: str = "groq",
     use_cache: bool = True,
-) -> list[tuple[str, float]]:
+) -> list[tuple[str, str, str, float]]:
     """
-    Standardize a batch of merchant strings using LLM.
+    Classify a batch of raw merchant strings using LLM.
 
     Processes sequentially (Groq free tier: 30 req/min).
-    Returns list of (standardized_name, confidence) tuples.
+    Returns list of (merchant_standardized, category, subcategory, confidence) tuples.
     """
     results = []
     for merchant in merchants:

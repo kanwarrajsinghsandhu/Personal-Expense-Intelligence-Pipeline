@@ -15,6 +15,7 @@ dbt-bigquery
 sentence-transformers
 joblib
 groq
+prophet
 
 # Local Development
 jupyter

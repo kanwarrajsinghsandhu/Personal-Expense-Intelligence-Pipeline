@@ -134,6 +134,114 @@ def normalize_merchant(text: str) -> str:
     return text.strip()
 
 
+# ---------------------------------------------------------------------------
+# Regex Heuristic Classifier (Stage 0 — fires before catalog and ML)
+# ---------------------------------------------------------------------------
+
+# Each rule: (compiled_pattern, canonical_name, category, subcategory)
+# Patterns match against the *raw* merchant description (case-insensitive).
+_REGEX_RULES: list[tuple] = [
+    # --- Rideshare & Food Delivery ---
+    (re.compile(r'\buber\b', re.I),                          "Uber",              "Rideshare & Food Delivery", "Rideshare"),
+    (re.compile(r'uber\s*eats', re.I),                       "Uber Eats",         "Rideshare & Food Delivery", "Food Delivery"),
+    (re.compile(r'\bdoordash\b', re.I),                      "DoorDash",          "Rideshare & Food Delivery", "Food Delivery"),
+    (re.compile(r'\bskip\s*the\s*dishes\b|\bskipthedishes\b', re.I), "SkipTheDishes", "Rideshare & Food Delivery", "Food Delivery"),
+    (re.compile(r'\blyft\b', re.I),                          "Lyft",              "Rideshare & Food Delivery", "Rideshare"),
+    # --- Telecommunications ---
+    (re.compile(r'\brogers\b', re.I),                        "Rogers",            "Telecommunications",        "Mobile Provider"),
+    (re.compile(r'\bbell\s*canada|\bbell\s*mobility', re.I), "Bell Canada",       "Telecommunications",        "Mobile Provider"),
+    (re.compile(r'\btelus\b', re.I),                         "Telus",             "Telecommunications",        "Mobile Provider"),
+    (re.compile(r'\bfido\b', re.I),                          "Fido",              "Telecommunications",        "Mobile Provider"),
+    (re.compile(r'\bshaw\b', re.I),                          "Shaw",              "Telecommunications",        "Internet"),
+    (re.compile(r'\bkoodo\b', re.I),                         "Koodo",             "Telecommunications",        "Mobile Provider"),
+    (re.compile(r'\bvirgin\s*plus|\bvirgin\s*mobile', re.I), "Virgin Plus",       "Telecommunications",        "Mobile Provider"),
+    (re.compile(r'\bvideotron\b', re.I),                     "Videotron",         "Telecommunications",        "Internet"),
+    # --- Streaming & Entertainment ---
+    (re.compile(r'\bnetflix\b', re.I),                       "Netflix",           "Entertainment & Events",    "Streaming"),
+    (re.compile(r'\bspotify\b', re.I),                       "Spotify",           "Entertainment & Events",    "Streaming"),
+    (re.compile(r'\bdisney\s*\+|\bdisney\s*plus', re.I),     "Disney+",           "Entertainment & Events",    "Streaming"),
+    (re.compile(r'\bcrave\b', re.I),                         "Crave",             "Entertainment & Events",    "Streaming"),
+    (re.compile(r'youtube\s*premium|youtubepremium', re.I),  "YouTube Premium",   "Entertainment & Events",    "Streaming"),
+    (re.compile(r'\bapple\s*tv\+', re.I),                    "Apple TV+",         "Entertainment & Events",    "Streaming"),
+    (re.compile(r'\bparamount\s*\+', re.I),                  "Paramount+",        "Entertainment & Events",    "Streaming"),
+    # --- Software & Services ---
+    (re.compile(r'\bopenai|\bchatgpt', re.I),                "OpenAI",            "Software & Services",       "AI/API Services"),
+    (re.compile(r'\bgithub\b', re.I),                        "GitHub",            "Software & Services",       "Developer Tools"),
+    (re.compile(r'\bheroku\b', re.I),                        "Heroku",            "Software & Services",       "Cloud Services"),
+    (re.compile(r'\baws\b|amazon\s*web\s*services', re.I),   "AWS",               "Software & Services",       "Cloud Services"),
+    (re.compile(r'\bgoogle\s*cloud|gcp\b', re.I),            "Google Cloud",      "Software & Services",       "Cloud Services"),
+    (re.compile(r'google\s*\*?one\b|google\s*storage', re.I),"Google One",        "Software & Services",       "Cloud Storage"),
+    (re.compile(r'\bmicrosoft|\bmsft\b|\boffice\s*365', re.I),"Microsoft",         "Software & Services",       "Productivity"),
+    (re.compile(r'\badobe\b', re.I),                         "Adobe",             "Software & Services",       "Creative Software"),
+    (re.compile(r'\bslack\b', re.I),                         "Slack",             "Software & Services",       "Productivity"),
+    (re.compile(r'\bnotion\b', re.I),                        "Notion",            "Software & Services",       "Productivity"),
+    # --- Food & Dining ---
+    (re.compile(r'\btim\s*hortons|\btims\b', re.I),          "Tim Hortons",       "Food & Dining",             "Coffee & Fast Food"),
+    (re.compile(r'\bstarbucks\b', re.I),                     "Starbucks",         "Food & Dining",             "Coffee"),
+    (re.compile(r'\bmcdonalds|\bmc\s*donald', re.I),         "McDonald's",        "Food & Dining",             "Fast Food"),
+    (re.compile(r'\bsubway\b', re.I),                        "Subway",            "Food & Dining",             "Fast Food"),
+    (re.compile(r'\bchipotle\b', re.I),                      "Chipotle",          "Food & Dining",             "Fast Food"),
+    # --- Groceries ---
+    (re.compile(r'\bloblaws\b|\bpc\s*express', re.I),        "Loblaws",           "Groceries",                 "Supermarket"),
+    (re.compile(r'\bsobeys\b', re.I),                        "Sobeys",            "Groceries",                 "Supermarket"),
+    (re.compile(r'\bfreshco\b', re.I),                       "FreshCo",           "Groceries",                 "Supermarket"),
+    (re.compile(r'\bmetro\s*inc|\bmetro\s*grocery', re.I),   "Metro",             "Groceries",                 "Supermarket"),
+    (re.compile(r'\bcostco\b', re.I),                        "Costco",            "Groceries",                 "Warehouse Club"),
+    (re.compile(r'\bwhole\s*foods', re.I),                   "Whole Foods",       "Groceries",                 "Supermarket"),
+    (re.compile(r'\bno\s*frills\b', re.I),                   "No Frills",         "Groceries",                 "Discount Grocery"),
+    (re.compile(r'\bfood\s*basics', re.I),                   "Food Basics",       "Groceries",                 "Discount Grocery"),
+    # --- Retail ---
+    (re.compile(r'\bwalmrt|\bwal\s*mart|\bwalmart', re.I),   "Walmart",           "Retail",                    "General Merchandise"),
+    (re.compile(r'\bbest\s*buy', re.I),                      "Best Buy",          "Retail",                    "Electronics"),
+    (re.compile(r'\bcanadian\s*tire', re.I),                 "Canadian Tire",     "Retail",                    "Auto & Home"),
+    (re.compile(r'\bhome\s*depot', re.I),                    "Home Depot",        "Retail",                    "Home Improvement"),
+    (re.compile(r'\bikea\b', re.I),                          "IKEA",              "Retail",                    "Furniture"),
+    (re.compile(r'\bthe\s*bay|\bhudsons\s*bay', re.I),       "Hudson's Bay",      "Retail",                    "Department Store"),
+    # --- Online Retail ---
+    (re.compile(r'\bamzn|\bamazon', re.I),                   "Amazon",            "Online Retail",             "Marketplace"),
+    (re.compile(r'\bebay\b', re.I),                          "eBay",              "Online Retail",             "Marketplace"),
+    (re.compile(r'\betsy\b', re.I),                          "Etsy",              "Online Retail",             "Marketplace"),
+    # --- Transportation ---
+    (re.compile(r'\bpetro.canada', re.I),                    "Petro-Canada",      "Transportation",            "Gas Station"),
+    (re.compile(r'\bshell\b', re.I),                         "Shell",             "Transportation",            "Gas Station"),
+    (re.compile(r'\bimpark\b', re.I),                        "Impark",            "Transportation",            "Parking"),
+    (re.compile(r'\bpresto\b', re.I),                        "PRESTO",            "Transportation",            "Transit Card"),
+    (re.compile(r'\bttc\b|\btoronto\s*transit', re.I),       "TTC",               "Transportation",            "Public Transit"),
+    # --- Health & Pharmacy ---
+    (re.compile(r'\bshoppers\s*drug', re.I),                 "Shoppers Drug Mart", "Health & Pharmacy",        "Pharmacy"),
+    (re.compile(r'\blon\s*drug|\bpharmaplus', re.I),         "Shoppers Drug Mart", "Health & Pharmacy",        "Pharmacy"),
+    (re.compile(r'\brexall\b', re.I),                        "Rexall",            "Health & Pharmacy",         "Pharmacy"),
+    # --- Professional Development ---
+    (re.compile(r'\blinkedin\b', re.I),                      "LinkedIn",          "Professional Development",  "Online Learning & Career"),
+    (re.compile(r'\bdatacamp\b', re.I),                      "DataCamp",          "Professional Development",  "Online Courses"),
+    (re.compile(r'\bcoursera\b', re.I),                      "Coursera",          "Professional Development",  "Online Courses"),
+    (re.compile(r'\budemy\b', re.I),                         "Udemy",             "Professional Development",  "Online Courses"),
+    # --- Internal Payments ---
+    (re.compile(r'payment.*thank\s*you|paiement.*merci|credit\s*card\s*payment', re.I), 
+                                                              "Internal Payment",  "Internal Payment",          "Credit Card Payment"),
+    (re.compile(r'\binterac\s*e.transfer', re.I),            "Interac e-Transfer", "Internal Payment",         "Transfer"),
+]
+
+
+def regex_classify_merchant(text: str) -> dict | None:
+    """
+    Run deterministic regex rules against a raw merchant description.
+
+    Returns a dict with canonical_name, category, subcategory if matched,
+    or None if no rule applies.
+    """
+    if not text:
+        return None
+    for pattern, canonical, category, subcategory in _REGEX_RULES:
+        if pattern.search(text):
+            return {
+                "canonical_name": canonical,
+                "category": category,
+                "subcategory": subcategory,
+            }
+    return None
+
+
 def _catalog_match_row_fuzzy(merchant: str, catalog: list[dict], threshold: int = 85) -> dict | None:
     """
     Fuzzy match merchant against catalog aliases using RapidFuzz.
@@ -194,13 +302,14 @@ def apply_catalog_overlay(
     Overlay catalog matches using fuzzy logic, with optional LLM fallback.
 
     Matching order:
+      0. Regex heuristics (deterministic, instant — covers top 50 Canadian merchants)
       1. Fuzzy match against catalog aliases (RapidFuzz, threshold=85)
-      2. LLM standardization for remaining unmatched rows (if use_llm_fallback=True)
+      2. LLM joint classification for remaining unmatched rows (if use_llm_fallback=True)
 
     Adds/updates: merchant_standardized, category, subcategory,
-                  match_type ('catalog' | 'llm' | 'ml' | 'none').
+                  match_type ('regex' | 'catalog' | 'llm' | 'ml' | 'none').
     """
-    if df.empty or not catalog:
+    if df.empty:
         df = df.copy()
         if "merchant_standardized" not in df.columns:
             df["merchant_standardized"] = df.get(text_column, "")
@@ -218,7 +327,16 @@ def apply_catalog_overlay(
 
     from rapidfuzz import process, fuzz
 
-    # --- Build alias map once ---
+    # --- Stage 0: Regex heuristics (fast, deterministic) ---
+    for i, merchant in enumerate(df[text_column]):
+        match = regex_classify_merchant(str(merchant))
+        if match:
+            df.at[i, "merchant_standardized"] = match["canonical_name"]
+            df.at[i, "category"] = match["category"]
+            df.at[i, "subcategory"] = match["subcategory"]
+            df.at[i, "match_type"] = "regex"
+
+    # --- Build alias map once for catalog matching ---
     alias_map: dict[str, dict] = {}
     for m in catalog:
         canonical = m.get("canonical_name", "").lower()
@@ -230,10 +348,14 @@ def apply_catalog_overlay(
 
     aliases = list(alias_map.keys())
 
-    # --- Stage 1: Fuzzy catalog match ---
+    # --- Stage 1: Fuzzy catalog match (skips already-matched rows) ---
     for i, merchant in enumerate(df[text_column]):
+        # Skip rows already classified by regex
+        if df.at[i, "match_type"] == "regex":
+            continue
+
         norm_merchant = normalize_merchant(str(merchant))
-        if not norm_merchant:
+        if not norm_merchant or not aliases:
             continue
 
         result = process.extractOne(norm_merchant, aliases, scorer=fuzz.token_set_ratio)
@@ -254,8 +376,8 @@ def apply_catalog_overlay(
             logger.warning("src.llm_client not found; skipping LLM fallback.")
             return df
 
-        # Only process rows that are NOT already catalog-matched or internal
-        unmatched_mask = ~df["match_type"].isin(["catalog", "internal"])
+        # Only process rows that are NOT already regex/catalog-matched or internal
+        unmatched_mask = ~df["match_type"].isin(["regex", "catalog", "internal"])
         unmatched_indices = df[unmatched_mask].index.tolist()
 
         if unmatched_indices:
@@ -268,17 +390,19 @@ def apply_catalog_overlay(
         for i in unmatched_indices:
             merchant_raw = str(df.at[i, text_column])
             try:
-                llm_name, confidence = standardize_merchant_with_llm(
+                llm_name, llm_category, llm_subcategory, _ = standardize_merchant_with_llm(
                     merchant_raw, provider=llm_provider
                 )
                 df.at[i, "merchant_standardized"] = llm_name
+                df.at[i, "category"] = llm_category
+                df.at[i, "subcategory"] = llm_subcategory
                 df.at[i, "match_type"] = "llm"
                 llm_call_count += 1
             except Exception as e:
                 logger.warning("LLM fallback failed for '%s': %s", merchant_raw, e)
 
         if llm_call_count:
-            logger.info("LLM standardized %d merchants.", llm_call_count)
+            logger.info("LLM classified %d merchants (name + category + subcategory).", llm_call_count)
 
     return df
 

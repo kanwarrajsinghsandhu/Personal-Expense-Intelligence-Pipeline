@@ -43,9 +43,22 @@ def _extract_statement_period(
         m = re.search(period_pattern, clean_text, re.IGNORECASE)
         if m and m.lastindex >= 2:
             try:
-                statement_start = pd.to_datetime(m.group(1).strip(), format=period_format)
-                statement_end = pd.to_datetime(m.group(2).strip(), format=period_format)
+                start_str = m.group(1).strip()
+                end_str = m.group(2).strip()
+                
+                # End date usually has the year in both RBC and Scotia
+                statement_end = pd.to_datetime(end_str, format=period_format)
                 statement_year = statement_end.year
+                
+                # Start date might lack the year (e.g. RBC: "NOV 28")
+                if "," not in start_str:
+                    statement_start = pd.to_datetime(f"{start_str}, {statement_year}", format="%b %d, %Y")
+                    # Handle Dec -> Jan rollover across calendar years
+                    if statement_start > statement_end:
+                        statement_start = pd.to_datetime(f"{start_str}, {statement_year - 1}", format="%b %d, %Y")
+                else:
+                    statement_start = pd.to_datetime(start_str, format=period_format)
+
             except (ValueError, TypeError):
                 pass
 
@@ -205,7 +218,7 @@ def _add_statement_features(df: pd.DataFrame) -> pd.DataFrame:
     )
 
     # statement_year_month for partitioning
-    df["statement_year_month"] = df["statement_end_date"].dt.strftime("%Y%m").astype("Int64")
+    df["statement_year_month"] = df["statement_end_date"].dt.strftime("%Y%m")
 
     # posting_lag_days
     df["posting_lag_days"] = (df["posted_date_dt"] - df["transaction_date_dt"]).dt.days.astype("Int64")

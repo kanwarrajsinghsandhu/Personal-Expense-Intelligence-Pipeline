@@ -131,6 +131,7 @@ def extract_pdf(
     if bank_id is None:
         from src.parsing.bank_detector import detect_bank
         bank_id = detect_bank(pages_text)
+    logger.info(f"Detected bank: {bank_id}")
 
     if bank_id is None:
         logger.error("Could not determine bank for PDF")
@@ -140,6 +141,7 @@ def extract_pdf(
     if profile is None:
         logger.error("Bank profile not found: %s", bank_id)
         return pages_text, [], None
+    logger.info(f"Start marker: {profile.get('start_marker')}, End marker: {profile.get('end_marker')}")
 
     # Find pages with transaction content
     keywords = profile.get("keywords", [])
@@ -153,6 +155,9 @@ def extract_pdf(
     transaction_blocks: list[dict[str, Any]] = []
     for page_num in pages_to_parse:
         text = pages_text.get(page_num, "")
+        # Log a snippet of the page text for debugging
+        snippet = text.replace("\n", " ")[:200]
+        logger.debug(f"Page {page_num} snippet: {snippet}")
         lines = _extract_blocks_from_page(text, page_num, profile)
         transaction_blocks.append({"page_number": page_num, "lines": lines})
         logger.info("Extracted %d transaction lines from page %d", len(lines), page_num)

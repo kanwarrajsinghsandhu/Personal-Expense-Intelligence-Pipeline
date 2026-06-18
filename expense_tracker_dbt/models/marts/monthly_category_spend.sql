@@ -5,7 +5,7 @@ SELECT
     bank_name,
     statement_type,
     DATE_TRUNC(transaction_date, MONTH) AS spend_month,
-    category,
+    COALESCE(category, 'Uncategorized') AS category,
     SUM(amount) AS total_amount,
     COUNT(*) AS transaction_count,
     ROUND(AVG(amount), 2) AS avg_transaction_size
